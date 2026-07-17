@@ -1,0 +1,17 @@
+# raw capture output + logs
+raw/
+json/
+*.log
+capture.log
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+.omc/
+
+# proxies / secrets
+proxies.txt
+*.env
