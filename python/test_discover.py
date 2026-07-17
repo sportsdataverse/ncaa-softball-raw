@@ -3,7 +3,15 @@
 from __future__ import annotations
 
 import pytest
-from discover import discover_season, parse_contest_ids, parse_team_ids, team_list_path
+from discover import (
+    WSB_SEASON_DIVISIONS,
+    discover_dates,
+    discover_season,
+    parse_contest_ids,
+    parse_team_ids,
+    scoreboard_path,
+    team_list_path,
+)
 
 
 def test_team_list_path_softball_default_and_baseball() -> None:
@@ -46,3 +54,30 @@ def test_discover_season_zero_teams_raises() -> None:
 def test_discover_season_wsb_error_notes_todo() -> None:
     with pytest.raises(ValueError, match="WSB team-list flow is a known TODO"):
         discover_season(2025, sport_code="WSB", fetch_fn=lambda p: "<html>shell</html>")
+
+
+# --- scoreboard route (the WORKING softball discovery) --------------------
+
+
+def test_wsb_season_division_id() -> None:
+    assert WSB_SEASON_DIVISIONS[2025] == 18763
+
+
+def test_scoreboard_path() -> None:
+    p = scoreboard_path(18763, "04/12/2025")
+    assert "season_divisions/18763/scoreboards" in p
+    assert "game_date=04%2F12%2F2025" in p
+    assert "conference_id=0" in p
+
+
+def test_discover_dates_across_scoreboards() -> None:
+    pages = {
+        scoreboard_path(
+            18763, "04/12/2025"
+        ): '<a href="/contests/6548848/box_score">x</a><a href="/contests/6542950/play_by_play">y</a>',
+        scoreboard_path(
+            18763, "04/13/2025"
+        ): '<a href="/contests/6542950/box_score">dup</a><a href="/contests/6550000/box_score">z</a>',
+    }
+    got = discover_dates(18763, ["04/12/2025", "04/13/2025"], fetch_fn=lambda p: pages[p])
+    assert got == ["6542950", "6548848", "6550000"]  # sorted + deduped across dates

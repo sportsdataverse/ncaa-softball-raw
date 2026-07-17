@@ -14,16 +14,33 @@ stats.ncaa.org IP-bans scrapers -- run sparingly, paced, from a residential IP.
 from __future__ import annotations
 
 import argparse
+import datetime
 import os
 import sys
 
 from capture import capture_season
-from discover import browser_fetch_fn, discover_season
+from discover import (
+    WSB_SEASON_DIVISIONS,
+    browser_fetch_fn,
+    discover_dates,
+    discover_season,
+)
 
 
 def _pool() -> "list[str]":
     raw = os.environ.get("NCAA_PROXY_POOL", "")
     return [p.strip() for p in raw.replace(",", "\n").splitlines() if p.strip()]
+
+
+def _season_dates(year: int) -> "list[str]":
+    """MM/DD/YYYY across the D-I softball season (Feb 1 - Jun 15), for the
+    scoreboard route. A scoreboard with no games simply yields no contests."""
+    start, end = datetime.date(year, 2, 1), datetime.date(year, 6, 15)
+    days = (end - start).days
+    return [
+        (start + datetime.timedelta(days=i)).strftime("%m/%d/%Y")
+        for i in range(days + 1)
+    ]
 
 
 def main() -> int:
@@ -52,7 +69,14 @@ def main() -> int:
 
     fetch = browser_fetch_fn(proxy_pool=pool)  # one held session
     print(f"[discover] {args.sport} {args.year} D{args.division} ...", flush=True)
-    contests = discover_season(args.year, args.division, args.sport, fetch_fn=fetch)
+    if args.sport == "WSB":  # softball: scoreboard route (team-list returns a shell)
+        sid = WSB_SEASON_DIVISIONS.get(args.year)
+        if sid is None:
+            print(f"no WSB season_divisions id for {args.year}", file=sys.stderr)
+            return 2
+        contests = discover_dates(sid, _season_dates(args.year), fetch_fn=fetch)
+    else:  # baseball: team-list route
+        contests = discover_season(args.year, args.division, args.sport, fetch_fn=fetch)
     print(f"[discover] {len(contests)} contests", flush=True)
     stats = capture_season(contests, fetch, args.out, max_contests=args.max)
     print(f"[capture] {stats}", flush=True)
