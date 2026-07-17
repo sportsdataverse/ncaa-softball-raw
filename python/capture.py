@@ -1,17 +1,19 @@
-"""Capture raw NCAA softball pbp bundles from stats.ncaa.org -- idempotent +
+"""Capture raw NCAA softball game bundles from stats.ncaa.org -- idempotent +
 resumable. (Sport-agnostic: the same capture serves baseball, whose producer now
 lives in the baseballr-data repo.)
 
-Fetches ``/contests/{id}/play_by_play`` (+ ``box_score``) via an injectable
+Fetches all game-detail tabs -- ``/contests/{id}/play_by_play`` plus ``box_score``,
+``team_stats``, ``individual_stats`` and ``situational_stats`` -- via an injectable
 ``fetch_fn`` (live: a held ``NcaaFetcher.with_browser`` session) and writes one
 gzipped JSON bundle per contest to ``{out_dir}/json/{id}.json.gz`` -- the tree the
-``-data`` ingest reads. Resume is file-exists based (Ctrl-C safe). A consecutive-
-failure breaker hard-stops a ban/challenge storm instead of grinding.
+``-data`` ingest + the sdv-py ``college_softball_ncaa_*`` parsers read.
+``play_by_play`` is the validity gate; the other tabs are best-effort (stored
+``null`` on a fetch miss). Resume is file-exists based (Ctrl-C safe). A
+consecutive-failure breaker hard-stops a ban/challenge storm instead of grinding.
 
-Sport-agnostic: the same capture serves baseball (MBA) and softball (WSB) -- both
-render the per-inning ``<table class="table">`` pbp page. The
-:func:`sportsdataverse.baseball.college_baseball.parse_college_baseball_ncaa_pbp`
-parser (shipped in sdv-py) consumes these bundles.
+Softball and baseball render identical markup; the sdv-py
+``parse_college_softball_ncaa_*`` parsers (re-exports of the baseball parsers)
+consume these bundles. (``umpires`` is omitted -- ``/umpires`` does not resolve.)
 """
 
 from __future__ import annotations
@@ -27,6 +29,8 @@ FetchFn = Callable[[str], str]
 _MIN_PBP_BYTES = (
     15_000  # a real baseball/softball pbp page is ~45-55 KB; a stub/ban is < 2 KB
 )
+# Extra game-detail tabs captured alongside play_by_play (best-effort).
+_EXTRA_TABS = ("box_score", "team_stats", "individual_stats", "situational_stats")
 
 
 def bundle_path(contest_id: "str | int", out_dir: "str | Path") -> Path:
@@ -62,22 +66,17 @@ def capture_contest(
         return "failed"
     if not _looks_real(pbp):
         return "failed"
-    try:
-        box = fetch_fn(f"contests/{contest_id}/box_score")
-    except Exception:  # noqa: BLE001 - box is best-effort; pbp already landed
-        box = None
+    bundle: "dict[str, object]" = {"contest_id": str(contest_id), "play_by_play": pbp}
+    for tab in _EXTRA_TABS:  # best-effort; pbp already landed, so a tab miss is null
+        try:
+            bundle[tab] = fetch_fn(f"contests/{contest_id}/{tab}")
+        except Exception:  # noqa: BLE001
+            bundle[tab] = None
+    bundle["captured_at"] = datetime.now(timezone.utc).isoformat()
     path = bundle_path(contest_id, out_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
     with gzip.open(path, "wt", encoding="utf-8") as fh:
-        json.dump(
-            {
-                "contest_id": str(contest_id),
-                "play_by_play": pbp,
-                "box_score": box,
-                "captured_at": datetime.now(timezone.utc).isoformat(),
-            },
-            fh,
-        )
+        json.dump(bundle, fh)
     return "captured"
 
 
