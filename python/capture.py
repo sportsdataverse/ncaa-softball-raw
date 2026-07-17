@@ -1,5 +1,6 @@
-"""Capture raw NCAA baseball/softball pbp bundles from stats.ncaa.org --
-idempotent + resumable.
+"""Capture raw NCAA softball pbp bundles from stats.ncaa.org -- idempotent +
+resumable. (Sport-agnostic: the same capture serves baseball, whose producer now
+lives in the baseballr-data repo.)
 
 Fetches ``/contests/{id}/play_by_play`` (+ ``box_score``) via an injectable
 ``fetch_fn`` (live: a held ``NcaaFetcher.with_browser`` session) and writes one
@@ -23,7 +24,9 @@ from typing import Callable, Iterable, Optional
 
 FetchFn = Callable[[str], str]
 
-_MIN_PBP_BYTES = 15_000  # a real baseball/softball pbp page is ~45-55 KB; a stub/ban is < 2 KB
+_MIN_PBP_BYTES = (
+    15_000  # a real baseball/softball pbp page is ~45-55 KB; a stub/ban is < 2 KB
+)
 
 
 def bundle_path(contest_id: "str | int", out_dir: "str | Path") -> Path:
@@ -38,10 +41,14 @@ def is_captured(contest_id: "str | int", out_dir: "str | Path") -> bool:
 def _looks_real(html: "Optional[str]") -> bool:
     # a real pbp page renders innings as <table class="table">; a challenge stub /
     # ban page is tiny and table-less.
-    return bool(html) and len(html) >= _MIN_PBP_BYTES and 'class="table"' in html.lower()
+    return (
+        bool(html) and len(html) >= _MIN_PBP_BYTES and 'class="table"' in html.lower()
+    )
 
 
-def capture_contest(fetch_fn: FetchFn, contest_id: "str | int", out_dir: "str | Path") -> str:
+def capture_contest(
+    fetch_fn: FetchFn, contest_id: "str | int", out_dir: "str | Path"
+) -> str:
     """Fetch + persist one contest bundle.
 
     Returns ``"skipped"`` (already captured), ``"captured"``, or ``"failed"``

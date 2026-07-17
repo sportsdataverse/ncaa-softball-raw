@@ -6,7 +6,7 @@ the ``NCAA_PROXY_POOL`` env var (newline/comma-separated ``http://user:pass@host
 
 Usage::
 
-    NCAA_PROXY_POOL="$(cat proxies.txt)" python python/run.py --sport MBA --year 2025 --out ./raw
+    NCAA_PROXY_POOL="$(cat proxies.txt)" python python/run.py --sport WSB --year 2025 --out ./raw
 
 stats.ncaa.org IP-bans scrapers -- run sparingly, paced, from a residential IP.
 """
@@ -28,16 +28,26 @@ def _pool() -> "list[str]":
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="NCAA baseball/softball raw pbp capture")
-    ap.add_argument("--sport", default="MBA", choices=["MBA", "WSB"], help="MBA=baseball, WSB=softball")
+    ap.add_argument(
+        "--sport",
+        default="WSB",
+        choices=["WSB", "MBA"],
+        help="WSB=softball, MBA=baseball",
+    )
     ap.add_argument("--year", type=int, required=True, help="academic year, e.g. 2025")
     ap.add_argument("--division", type=int, default=1)
     ap.add_argument("--out", required=True, help="output repo root for the json/ tree")
-    ap.add_argument("--max", type=int, default=None, help="cap NEW captures this run (chunking)")
+    ap.add_argument(
+        "--max", type=int, default=None, help="cap NEW captures this run (chunking)"
+    )
     args = ap.parse_args()
 
     pool = _pool()
     if not pool:
-        print("NCAA_PROXY_POOL is empty -- set a US-residential proxy pool", file=sys.stderr)
+        print(
+            "NCAA_PROXY_POOL is empty -- set a US-residential proxy pool",
+            file=sys.stderr,
+        )
         return 2
 
     fetch = browser_fetch_fn(proxy_pool=pool)  # one held session

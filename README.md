@@ -1,51 +1,50 @@
-# ncaa-baseball-raw
+# ncaa-softball-raw
 
-Raw **stats.ncaa.org** play-by-play capture for NCAA **baseball** (`MBA`) and
-**softball** (`WSB`) — the producer half of the pipeline. Discovers a season's
-contests, then captures the raw pbp HTML as idempotent, resumable gzip bundles.
+Raw **stats.ncaa.org** play-by-play capture for NCAA **softball** (`sport_code=WSB`)
+— the producer half of the pipeline. Discovers a season's contests, then captures
+the raw pbp HTML as idempotent, resumable gzip bundles.
 
 The **parser** lives in sdv-py
-(`sportsdataverse.baseball.college_baseball.parse_college_baseball_ncaa_pbp`,
-softball re-exports it) — this repo does not parse; it captures the raw tree the
-`-data` ingest and that parser consume. This mirrors the `ncaa-mfb-hoops-raw` /
-`ncaa-mbb-hoops-raw` producer split.
+(`sportsdataverse.baseball.college_softball.parse_college_softball_ncaa_pbp` — a
+by-reference re-export of the college-baseball parser; softball uses the identical
+per-inning `<table class="table">` layout and play grammar). This repo does not
+parse; it captures the raw tree the parser + `-data` ingest consume. Mirrors the
+`ncaa-mfb-football-raw` producer split.
+
+> **Men's baseball** lives in **`baseballr-data`** (`python/` producer). This repo
+> was split off from the former `ncaa-baseball-raw` to be softball-only.
 
 ## Layout
 
 ```
 python/
-  discover.py       # team list (sport_code=MBA|WSB) -> team pages -> contest_ids
+  discover.py       # team list (sport_code=WSB) -> team pages -> contest_ids
   capture.py        # /contests/{id}/play_by_play (+ box_score) -> json/{id}.json.gz
-  run.py            # live runner (holds one browser session; proxy pool from env)
-  test_discover.py  # offline (pure parsers + injected fetch)
-  test_capture.py   # offline (real fixture + tmp out_dir)
-tests/fixtures/     # real captured pbp page(s)
+  run.py            # live runner (holds one browser session; NCAA_PROXY_POOL env)
+  test_discover.py / test_capture.py   # offline
+tests/fixtures/     # a real captured pbp page (baseball, as a structural stand-in
+                    #   until a WSB game is captured -- identical table layout)
 docs/DESIGN.md
 scripts/run_capture.sh
 ```
 
-## Transport
+## Status
 
-Capture drives `sportsdataverse.mbb.mbb_ncaa_fetch.NcaaFetcher.with_browser`
-(patchright + `--headless=new` + a **US-residential** proxy pool — datacenter IPs
-get an instant edge 403). Hold ONE session; do not relaunch per-call (the
-patchright driver crashes under a relaunch storm). See sdv-py PRs #271 / #276.
+- **Capture** works (given contest_ids) — the softball pbp page shares baseball's
+  layout, so the shared capture + sdv-py parser apply unchanged.
+- **Discovery is a TODO.** `WSB` is the confirmed softball sport_code (site sport
+  dropdown), but `inst_team_list?sport_code=WSB` returns a ~23 KB shell with zero
+  `/teams/` links — softball's team-list flow differs from baseball's, so
+  `discover_season(sport_code="WSB")` currently raises. Provide contest_ids
+  directly, or resolve the WSB discovery path (scoreboard / season-division route).
 
 ## Run
 
 ```sh
 NCAA_PROXY_POOL="$(cat proxies.txt)" \
-  python python/run.py --sport MBA --year 2025 --out ./raw --max 200
+  python python/run.py --sport WSB --year 2025 --out ./raw
 ```
 
-**stats.ncaa.org IP-bans scrapers** — run sparingly, paced, from a residential IP.
-Resume is file-exists based (Ctrl-C safe); a consecutive-failure breaker hard-stops
-a ban/challenge storm.
-
-## Status
-
-- **Baseball (MBA):** discovery + capture working (307 D1 teams for 2025).
-- **Softball (WSB):** capture works; **discovery is a TODO** — `WSB` is the
-  confirmed sport code but `inst_team_list?sport_code=WSB` returns a shell (its
-  team-list flow differs from baseball's). Provide contest_ids directly until the
-  WSB discovery flow is resolved.
+Transport = `sportsdataverse.mbb.mbb_ncaa_fetch.NcaaFetcher.with_browser`
+(patchright + `--headless=new` + a **US-residential** proxy pool). Hold ONE session.
+stats.ncaa.org IP-bans scrapers — run sparingly, paced, from a residential IP.

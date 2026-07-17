@@ -1,17 +1,18 @@
-"""NCAA baseball/softball season discovery: team list -> team pages -> contest_ids.
+"""NCAA softball (sport_code=WSB) season discovery: team list -> team pages ->
+contest_ids.
 
 Pure parse functions + an injectable ``fetch_fn`` so discovery is fully offline-
 testable; the live default drives ``NcaaFetcher.with_browser`` (real-GPU host +
 US residential proxy pool -- see docs/DESIGN.md; datacenter IPs get an edge 403).
 
-Sport codes: ``MBA`` = baseball (D1 = division 1), ``WSB`` = softball.
-
-**Softball caveat (verified 2026-07-17):** ``WSB`` is the confirmed softball
-sport_code (site sport dropdown), but ``inst_team_list?sport_code=WSB`` returns a
-~23 KB shell with zero ``/teams/`` links -- softball's team-list flow differs from
-baseball's. Baseball (``MBA``) discovery works as written (307 D1 teams for 2025).
-Resolving the WSB team-list flow is a TODO; capture (below) works for both sports
-once contest_ids are in hand.
+**Open TODO -- WSB team-list flow (verified 2026-07-17):** ``WSB`` is the confirmed
+softball sport_code (site sport dropdown), but ``inst_team_list?sport_code=WSB``
+returns a ~23 KB shell with zero ``/teams/`` links -- softball's team-list flow
+differs from baseball's, so :func:`discover_season` currently raises for WSB.
+Capture works once contest_ids are in hand (provide them directly, or resolve the
+WSB discovery path -- scoreboard / season-division route). The ``sport_code``
+argument is retained so the same code discovers baseball once WSB is solved; the
+baseball (``MBA``) producer lives in the ``baseballr-data`` repo.
 """
 
 from __future__ import annotations
@@ -25,8 +26,10 @@ _TEAM_ID_RE = re.compile(r"/teams/(\d+)")
 _CONTEST_ID_RE = re.compile(r"/contests/(\d+)/")
 
 
-def team_list_path(academic_year: int, division: int = 1, sport_code: str = "MBA") -> str:
-    """stats.ncaa.org team-list path. ``sport_code`` MBA=baseball / WSB=softball;
+def team_list_path(
+    academic_year: int, division: int = 1, sport_code: str = "WSB"
+) -> str:
+    """stats.ncaa.org team-list path. ``sport_code`` WSB=softball / MBA=baseball;
     ``division`` 1/2/3 = D-I/II/III."""
     return f"team/inst_team_list?academic_year={academic_year}&conf_id=-1&division={division}&sport_code={sport_code}"
 
@@ -54,7 +57,7 @@ def browser_fetch_fn(proxy_pool: "Optional[List[str]]" = None) -> FetchFn:
 def discover_season(
     academic_year: int,
     division: int = 1,
-    sport_code: str = "MBA",
+    sport_code: str = "WSB",
     *,
     fetch_fn: Optional[FetchFn] = None,
 ) -> List[str]:
@@ -79,7 +82,8 @@ def discover_season(
     if not teams:
         raise ValueError(
             f"no teams for academic_year={academic_year} division={division} "
-            f"sport_code={sport_code}" + (" (WSB team-list flow is a known TODO)" if sport_code == "WSB" else "")
+            f"sport_code={sport_code}"
+            + (" (WSB team-list flow is a known TODO)" if sport_code == "WSB" else "")
         )
     contests: "set[str]" = set()
     for team_id in teams:

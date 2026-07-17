@@ -6,10 +6,10 @@ import pytest
 from discover import discover_season, parse_contest_ids, parse_team_ids, team_list_path
 
 
-def test_team_list_path_baseball_and_softball() -> None:
-    assert "sport_code=MBA" in team_list_path(2025)
+def test_team_list_path_softball_default_and_baseball() -> None:
+    assert "sport_code=WSB" in team_list_path(2025)  # softball default
     assert "division=1" in team_list_path(2025)
-    assert "sport_code=WSB" in team_list_path(2025, sport_code="WSB")
+    assert "sport_code=MBA" in team_list_path(2025, sport_code="MBA")
     assert "division=2" in team_list_path(2024, division=2)
 
 
