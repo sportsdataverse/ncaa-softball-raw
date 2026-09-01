@@ -27,8 +27,8 @@ flowchart TB;
     subgraph A[ncaa-softball-raw];
         direction TB;
         A0[scripts/run_capture.sh]-->A1[python/ncaa_softball_01_run.py];
-        A1[python/ncaa_softball_01_run.py]-->A2[python/discover.py];
-        A2[python/discover.py]-->A3[python/capture.py];
+        A1[python/ncaa_softball_01_run.py]-->A2[python/ncaa_softball_raw_scrape/discover.py];
+        A2[python/ncaa_softball_raw_scrape/discover.py]-->A3[python/ncaa_softball_raw_scrape/capture.py];
     end;
 ```
 

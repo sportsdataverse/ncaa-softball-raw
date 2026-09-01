@@ -18,8 +18,8 @@ import datetime
 import os
 import sys
 
-from capture import capture_season
-from discover import (
+from ncaa_softball_raw_scrape.capture import capture_season
+from ncaa_softball_raw_scrape.discover import (
     WSB_SEASON_DIVISIONS,
     browser_fetch_fn,
     discover_dates,

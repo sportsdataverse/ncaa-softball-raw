@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 import pytest
-from capture import bundle_path, capture_contest, capture_season, is_captured
+from ncaa_softball_raw_scrape.capture import bundle_path, capture_contest, capture_season, is_captured
 
 FIX = (
     Path(__file__).resolve().parent.parent

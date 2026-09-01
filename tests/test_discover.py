@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from discover import (
+from ncaa_softball_raw_scrape.discover import (
     WSB_SEASON_DIVISIONS,
     discover_dates,
     discover_season,
