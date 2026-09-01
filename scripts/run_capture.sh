@@ -20,5 +20,5 @@ ARGS=(--sport "$SPORT" --year "$YEAR" --out "$OUT")
 [ -n "$MAX" ] && ARGS+=(--max "$MAX")
 
 echo "$(date -Is) START $SPORT $YEAR -> $OUT" >> capture.log
-"$PY" python/run.py "${ARGS[@]}" >> capture.log 2>&1
+"$PY" python/ncaa_softball_01_run.py "${ARGS[@]}" >> capture.log 2>&1
 echo "$(date -Is) EXIT=$?" >> capture.log
