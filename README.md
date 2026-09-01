@@ -90,3 +90,16 @@ NCAA_PROXY_POOL="$(cat proxies.txt)" \
 Transport = `sportsdataverse.mbb.mbb_ncaa_fetch.NcaaFetcher.with_browser`
 (patchright + `--headless=new` + a **US-residential** proxy pool). Hold ONE session.
 stats.ncaa.org IP-bans scrapers — run sparingly, paced, from a residential IP.
+
+## Consumers
+
+The packages that read what this repo produces:
+
+- **R:** `softballR`
+- **Python:** [`sportsdataverse.baseball (college_softball)`](https://github.com/sportsdataverse/sportsdataverse-py) — docs at <https://py.sportsdataverse.org>
+
+## Stage inventory
+
+Every numbered pipeline stage in `python/` (auto-listed; run subsets with the `scripts/*.sh` drivers by number or name):
+
+- `python/ncaa_softball_01_run.py`
