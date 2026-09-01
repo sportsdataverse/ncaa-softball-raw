@@ -56,21 +56,25 @@ file over `raw.githubusercontent.com`.
 
 <!-- END GENERATED: status -->
 
-## Layout
+## Repository layout
+
+<!-- BEGIN GENERATED: layout -->
 
 ```
-python/
-  ncaa_softball_01_run.py        # numbered stage: live runner (one browser session; NCAA_PROXY_POOL env)
-  ncaa_softball_raw_scrape/
-    discover.py     # team list (sport_code=WSB) -> team pages -> contest_ids
-    capture.py      # /contests/{id}/play_by_play (+ box_score) -> json/{id}.json.gz
-    run.py          # runner internals behind the numbered stage
-tests/              # offline tests (test_discover / test_capture) + fixtures/
-                    #   (a real captured pbp page; baseball as a structural stand-in
-                    #    until a WSB game is captured -- identical table layout)
-docs/DESIGN.md
-scripts/run_capture.sh
+ncaa-softball-raw/
+├── docs/   # explainers, model reports and dataset docs
+├── python/   # Python pipeline stages, numbered in build order
+│   ├── ncaa_softball_raw_scrape/
+│   └── ncaa_softball_01_run.py
+├── scripts/   # bash drivers (the daily/weekly entry points)
+│   └── run_capture.sh
+└── tests/   # test suite
+    ├── fixtures/
+    ├── test_capture.py
+    └── test_discover.py
 ```
+
+<!-- END GENERATED: layout -->
 
 ## Status
 
