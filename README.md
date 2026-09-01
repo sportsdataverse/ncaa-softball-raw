@@ -14,6 +14,38 @@ parse; it captures the raw tree the parser + `-data` ingest consume. Mirrors the
 > **Men's baseball** lives in **`baseballr-data`** (`python/` producer). This repo
 > was split off from the former `ncaa-baseball-raw` to be softball-only.
 
+## ncaa-softball workflow diagram
+
+```mermaid
+  graph LR;
+    S[stats.ncaa.org]-->A[ncaa-softball-raw];
+    A[ncaa-softball-raw]-->T[committed raw tree softball/];
+```
+
+```mermaid
+flowchart TB;
+    subgraph A[ncaa-softball-raw];
+        direction TB;
+        A0[scripts/run_capture.sh]-->A1[python/run.py];
+        A1[python/run.py]-->A2[python/discover.py];
+        A2[python/discover.py]-->A3[python/capture.py];
+    end;
+```
+
+No `-data` sibling exists yet and this repo publishes no releases — the
+committed tree is the product; a future softball `-data` builder reads it per
+file over `raw.githubusercontent.com`.
+
+## Automation & status
+
+<!-- BEGIN GENERATED: status -->
+
+| workflow | schedule | last run |
+|---|---|---|
+| _none_ | — | — |
+
+<!-- END GENERATED: status -->
+
 ## Layout
 
 ```
