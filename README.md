@@ -26,8 +26,8 @@ parse; it captures the raw tree the parser + `-data` ingest consume. Mirrors the
 flowchart TB;
     subgraph A[ncaa-softball-raw];
         direction TB;
-        A0[scripts/run_capture.sh]-->A1[python/run.py];
-        A1[python/run.py]-->A2[python/discover.py];
+        A0[scripts/run_capture.sh]-->A1[python/ncaa_softball_01_run.py];
+        A1[python/ncaa_softball_01_run.py]-->A2[python/discover.py];
         A2[python/discover.py]-->A3[python/capture.py];
     end;
 ```
@@ -84,7 +84,7 @@ scripts/run_capture.sh
 
 ```sh
 NCAA_PROXY_POOL="$(cat proxies.txt)" \
-  python python/run.py --sport WSB --year 2025 --out ./raw
+  python python/ncaa_softball_01_run.py --sport WSB --year 2025 --out ./raw
 ```
 
 Transport = `sportsdataverse.mbb.mbb_ncaa_fetch.NcaaFetcher.with_browser`
