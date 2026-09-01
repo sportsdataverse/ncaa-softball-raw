@@ -36,6 +36,16 @@ No `-data` sibling exists yet and this repo publishes no releases — the
 committed tree is the product; a future softball `-data` builder reads it per
 file over `raw.githubusercontent.com`.
 
+## Reports & explainers
+
+<!-- BEGIN GENERATED: reports -->
+
+| Report | What it is | Last updated |
+|---|---|---|
+| [NCAA softball raw pbp — design](docs/DESIGN.md) | explainer | 2026-07-17 |
+
+<!-- END GENERATED: reports -->
+
 ## Automation & status
 
 <!-- BEGIN GENERATED: status -->
